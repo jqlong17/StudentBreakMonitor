@@ -1,0 +1,1423 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>课间监测系统</title>
+    <style>
+        body {
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f6fa;
+        }
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background: white;
+            border-bottom: 1px solid #eee;
+        }
+        .tabs {
+            display: flex;
+            gap: 20px;
+        }
+        .tab {
+            padding: 8px 24px;
+            font-size: 14px;
+            color: #666;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+        .tab:hover {
+            color: #1890ff;
+            background: #f0f5ff;
+        }
+        .tab.active {
+            color: #1890ff;
+            background: #e6f7ff;
+            font-weight: 500;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding: 30px;
+            width: 100%;
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+        .sidebar {
+            width: 65%;
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        .stats-section {
+            grid-column: span 1;
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+        }
+        .activity-stats {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 0;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+            display: flex;
+            gap: 20px;
+        }
+        .stats-item {
+            flex: 1;
+            margin-bottom: 0;
+        }
+        .stats-label {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        .stats-value {
+            color: #1890ff;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .stats-value .highlight {
+            color: #2ecc71;
+            font-size: 20px;
+        }
+        .profile-card {
+            flex: 1;
+            background: white;
+            border-radius: 12px;
+            padding: 28px;
+            max-width: 35%;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        .class-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-top: 24px;
+            padding: 10px;
+        }
+        .class-item {
+            padding: 16px 12px;
+            text-align: center;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            border: 1px solid #f0f0f0;
+        }
+        .class-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            border-color: #e6f3ff;
+        }
+        .class-item.active {
+            background: #e6f7ff;
+            border-color: #1890ff;
+        }
+        .class-item[data-activity="high"] {
+            background: #ffebee;
+            border-color: #ff4d4f;
+        }
+        .class-item[data-activity="medium"] {
+            background: #fff7e6;
+            border-color: #ffa940;
+        }
+        .class-item[data-activity="low"] {
+            background: #e6f7ff;
+            border-color: #1890ff;
+        }
+        .class-item.active[data-activity="high"] {
+            background: #ffdee0;
+            border-color: #ff4d4f;
+        }
+        .class-item.active[data-activity="medium"] {
+            background: #fff1d4;
+            border-color: #ffa940;
+        }
+        .class-item.active[data-activity="low"] {
+            background: #d4edff;
+            border-color: #1890ff;
+        }
+        .class-item.vision-alert {
+            position: relative;
+        }
+        .class-item.vision-alert::after {
+            content: '👁️';
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            font-size: 12px;
+            color: #ff4d4f;
+        }
+        .grade-label {
+            margin: 15px 0 10px;
+            color: #666;
+        }
+        .bottom-bar {
+            margin-top: 20px;
+            padding: 10px;
+            background: #f5f5f5;
+            text-align: center;
+            border-radius: 4px;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 10px;
+        }
+        .avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 10px;
+            margin-right: 20px;
+        }
+        .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+        .title {
+            flex: 1;
+        }
+        .info-item {
+            display: flex;
+            padding: 14px 0;
+            border-bottom: 1px solid #eee;
+            margin: 0 16px;
+        }
+        .info-label {
+            width: 100px;
+            color: #666;
+        }
+        .info-value {
+            flex: 1;
+            color: #333;
+        }
+        .activity-high {
+            color: #2ecc71;
+            font-weight: bold;
+        }
+        .timeline {
+            margin-top: 36px;
+            padding: 24px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+        }
+        .timeline-item {
+            position: relative;
+            padding: 15px 0;
+            border-left: 2px solid #ddd;
+            margin-left: 15px;
+            padding-left: 20px;
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -7px;
+            top: 20px;
+            width: 12px;
+            height: 12px;
+            background: #fff;
+            border: 2px solid #4a69bd;
+            border-radius: 50%;
+        }
+        .timeline-date {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        .timeline-content {
+            color: #333;
+            line-height: 1.5;
+        }
+        .chart-container {
+            margin-top: 20px;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        .chart-section {
+            grid-column: span 1;
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+        }
+        .chart-title {
+            font-size: 16px;
+            color: #333;
+            margin: 24px 0 15px 0;
+            padding-left: 10px;
+            border-left: 3px solid #1890ff;
+        }
+        .chart-title:first-child {
+            margin-top: 0;
+        }
+        .students-section {
+            grid-column: span 2;
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+        }
+        .activity-legend {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 15px;
+            padding: 0 10px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+        }
+        .legend-color.high {
+            background: #ffebee;
+            border: 1px solid #ff4d4f;
+        }
+        .legend-color.medium {
+            background: #fff7e6;
+            border: 1px solid #ffa940;
+        }
+        .legend-color.low {
+            background: #e6f7ff;
+            border: 1px solid #1890ff;
+        }
+        .legend-text {
+            font-size: 14px;
+            color: #666;
+        }
+        .content-section {
+            width: 100%;
+        }
+        
+        #class-detail-content {
+            display: flex;
+            gap: 30px;
+            width: 100%;
+        }
+        .filters {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+        .filter-select, .filter-date {
+            padding: 6px 12px;
+            border: 1px solid #e8e8e8;
+            border-radius: 4px;
+            font-size: 14px;
+            color: #333;
+            background: white;
+        }
+        .filter-select:focus, .filter-date:focus {
+            outline: none;
+            border-color: #1890ff;
+        }
+        .title-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 24px 0 15px 0;
+        }
+        
+        .title-wrapper:first-child {
+            margin-top: 0;
+        }
+
+        .title-wrapper .chart-title {
+            margin: 0;
+        }
+        
+        .help-icon {
+            color: #999;
+            cursor: help;
+            font-size: 14px;
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+        }
+        
+        .help-icon:hover::after {
+            content: attr(data-tip);
+            position: absolute;
+            left: 100%;
+            top: 0;
+            transform: none;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            line-height: 1.5;
+            white-space: normal;
+            z-index: 1000;
+            margin-left: 8px;
+            max-width: 300px;
+            width: max-content;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        @media (max-width: 1400px) {
+            .help-icon:hover::after {
+                left: auto;
+                right: 100%;
+                margin-left: 0;
+                margin-right: 8px;
+            }
+        }
+
+        .page-header {
+            font-size: 20px;
+            color: #333;
+            padding: 20px 30px;
+            margin: 0;
+            background: white;
+            border-bottom: 1px solid #eee;
+        }
+
+        .control-bar {
+            width: 100%;
+            padding: 16px 24px;
+            box-sizing: border-box;
+            background: white;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .control-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .control-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .control-group {
+            display: flex;
+            gap: 16px;
+        }
+
+        .content-area {
+            display: flex;
+            width: 100%;
+        }
+
+        #daily-content {
+            display: flex;
+            gap: 20px;
+            width: 100%;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        .sidebar-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        /* 添加两列布局容器 */
+        .charts-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;  /* 两个等宽列 */
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        /* 全宽图表样式 */
+        .chart-section.full-width {
+            grid-column: span 2;  /* 跨越两列 */
+        }
+
+        /* 调整图表容器高度保持一致 */
+        .chart-section .chart-container {
+            height: 300px;
+        }
+    </style>
+
+</head>
+<body>
+    <h1 class="page-header">课间活跃详情</h1>
+    
+    <div class="container">
+        <div class="control-bar">
+            <div class="control-group">
+                <div class="tab active" data-tab="monthly">月度</div>
+                <div class="tab" data-tab="daily">单日</div>
+            </div>
+            <div class="control-group">
+                <select class="filter-select">
+                    <option value="5-2">五年二班</option>
+                    <option value="5-1">五年一班</option>
+                    <option value="5-3">五年三班</option>
+                </select>
+                <input type="date" class="filter-date" value="2024-03-04">
+            </div>
+        </div>
+
+        <div class="content-area">
+            <div id="monthly-content" style="display: none;">
+                <div class="content-section" style="display: flex; gap: 20px;">
+                    <div class="sidebar">
+                        <div class="title-wrapper">
+                            <h3 class="chart-title">班级月度课间活跃统计</h3>
+                            <span class="help-icon" data-tip="统计周期：所选日期往前推30天。当月平均每天的课间走出教室人数大于总人数的75%则认为该班级的课间活跃度高。25%到75%则为中，0%到25%则认为低。">?</span>
+                        </div>
+                        <div class="activity-stats">
+                            <div class="stats-item">
+                                <div class="stats-label">月度室外活动度</div>
+                                <div class="stats-value"><span class="highlight">中</span></div>
+                            </div>
+                            <div class="stats-item">
+                                <div class="stats-label">月均每课间走出教室人数</div>
+                                <div class="stats-value">28人（占比28/40）</div>
+                            </div>
+                        </div>
+
+                        <div class="title-wrapper">
+                            <h3 class="chart-title">月度课间活动趋势</h3>
+                            <span class="help-icon" data-tip="展示最近30天内每天的课间活动人数变化趋势">?</span>
+                        </div>
+                        <div class="chart-section">
+                            <div id="monthlyBreakTimeChart" style="width: 100%; height: 200px;"></div>
+                        </div>
+
+                        <div class="title-wrapper">
+                            <h3 class="chart-title">学生月度活跃详情</h3>
+                            <span class="help-icon" data-tip="展示每个学生在最近30天内的课间活跃程度，颜色区分不同活跃度，眼睛图标表示视力需要关注">?</span>
+                        </div>
+                        <div class="students-section">
+                            <div class="activity-legend">
+                                <div class="legend-item">
+                                    <span class="legend-color high"></span>
+                                    <span class="legend-text">高活跃（月均4次以上）</span>
+                                </div>
+                                <div class="legend-item">
+                                    <span class="legend-color medium"></span>
+                                    <span class="legend-text">中活跃（月均2-3次）</span>
+                                </div>
+                                <div class="legend-item">
+                                    <span class="legend-color low"></span>
+                                    <span class="legend-text">低活跃（月均1次以下）</span>
+                                </div>
+                            </div>
+                            <div class="class-grid">
+                                <div class="class-item" data-activity="high" onclick="highlightStudent(this)">张伟</div>
+                                <div class="class-item" data-activity="high" onclick="highlightStudent(this)">李娜</div>
+                                <div class="class-item" data-activity="low">学生3</div>
+                                <div class="class-item" data-activity="medium">学生4</div>
+                                <div class="class-item" data-activity="low">学生5</div>
+                                <div class="class-item" data-activity="medium">学生6</div>
+                                <div class="class-item" data-activity="high">学生7</div>
+                                <div class="class-item" data-activity="medium">学生8</div>
+                                <div class="class-item" data-activity="low">学生9</div>
+                                <div class="class-item" data-activity="high">学生10</div>
+                                <div class="class-item" data-activity="medium">学生11</div>
+                                <div class="class-item" data-activity="low">学生12</div>
+                                <div class="class-item" data-activity="high">学生13</div>
+                                <div class="class-item" data-activity="medium">学生14</div>
+                                <div class="class-item" data-activity="low">学生15</div>
+                                <div class="class-item" data-activity="high">学生16</div>
+                                <div class="class-item" data-activity="medium">学生17</div>
+                                <div class="class-item" data-activity="low">学生18</div>
+                                <div class="class-item" data-activity="high">学生19</div>
+                                <div class="class-item" data-activity="medium">学生20</div>
+                                <div class="class-item" data-activity="low">学生21</div>
+                                <div class="class-item" data-activity="high">学生22</div>
+                                <div class="class-item" data-activity="medium">学生23</div>
+                                <div class="class-item" data-activity="low">学生24</div>
+                                <div class="class-item" data-activity="high">学生25</div>
+                                <div class="class-item" data-activity="medium">学生26</div>
+                                <div class="class-item" data-activity="low">学生27</div>
+                                <div class="class-item" data-activity="high">学生28</div>
+                                <div class="class-item" data-activity="medium">学生29</div>
+                                <div class="class-item" data-activity="low">学生30</div>
+                                <div class="class-item" data-activity="high">学生31</div>
+                                <div class="class-item" data-activity="medium">学生32</div>
+                                <div class="class-item" data-activity="low">学生33</div>
+                                <div class="class-item" data-activity="high">学生34</div>
+                                <div class="class-item" data-activity="medium">学生35</div>
+                                <div class="class-item" data-activity="low">学生36</div>
+                                <div class="class-item" data-activity="high">学生37</div>
+                                <div class="class-item" data-activity="medium">学生38</div>
+                                <div class="class-item" data-activity="low">学生39</div>
+                                <div class="class-item" data-activity="high">学生40</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="profile-card">
+                        <div class="title-wrapper">
+                            <h3 class="chart-title">个人月度详情</h3>
+                            <span class="help-icon" data-tip="展示学生近30天的活动统计、身体数据变化和健康建议">?</span>
+                        </div>
+                        <div class="header">
+                            <div class="avatar">
+                                <img src="/Users/srt/Documents/课间监测/avatar.png" alt="张伟的头像">
+                            </div>
+                            <div class="title">
+                                <h2>个人画像</h2>
+                            </div>
+                        </div>
+                        
+                        <div class="info-item">
+                            <div class="info-label">姓名</div>
+                            <div class="info-value">张伟</div>
+                        </div>
+                        
+                        <div class="info-item">
+                            <div class="info-label">年龄</div>
+                            <div class="info-value">12岁</div>
+                        </div>
+                        
+                        <div class="info-item">
+                            <div class="info-label">性别</div>
+                            <div class="info-value">男</div>
+                        </div>
+                        
+                        <div class="info-item">
+                            <div class="info-label">所属班级</div>
+                            <div class="info-value">5年2班</div>
+                        </div>
+                        
+                        <div class="info-item">
+                            <div class="info-label">视力</div>
+                            <div class="info-value">左眼1.2，右眼1.2</div>
+                        </div>
+                        
+                        <div class="info-item">
+                            <div class="info-label">BMI</div>
+                            <div class="info-value">18.5（正常范围）</div>
+                        </div>
+                        
+                        <div class="info-item">
+                            <div class="info-label">体重</div>
+                            <div class="info-value">40公斤</div>
+                        </div>
+                        
+                        <div class="info-item">
+                            <div class="info-label">课间活跃度</div>
+                            <div class="info-value activity-high">中</div>
+                        </div>
+
+                        <div class="title-wrapper">
+                            <h3 class="chart-title">事件时间线</h3>
+                            <span class="help-icon" data-tip="记录学生近期的活动、观察记录和健康建议">?</span>
+                        </div>
+                        <div class="timeline">
+                            <div class="timeline-item">
+                                <div class="timeline-date">03/04 机器人：</div>
+                                <div class="timeline-content">
+                                    张伟今天积极参与了数学竞赛，并取得了优异成绩
+                                </div>
+                            </div>
+                            <div class="timeline-item">
+                                <div class="timeline-date">03/03 智慧体育</div>
+                                <div class="timeline-content">
+                                    张伟今天在篮球场上打了90分钟，表现出色！
+                                </div>
+                            </div>
+                            <div class="timeline-item">
+                                <div class="timeline-date">03/03 课间活动</div>
+                                <div class="timeline-content">
+                                    张伟课间积极参与室外活动，课间活跃度在班级的前10%
+                                </div>
+                            </div>
+                            <div class="timeline-item">
+                                <div class="timeline-date">01/22 老师说：</div>
+                                <div class="timeline-content">
+                                    张伟是年级5班的学生，已经12岁了，他是一个聪明好学的小男孩，学习很用功努力，体力很好，体重也很标准，他和同班同学关系很融洽，总是充满活力，喜欢和同学们一起玩耍，是班级里的开心果。
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="daily-content" class="content-section">
+                <div class="sidebar">
+                    <div class="title-wrapper">
+                        <h3 class="chart-title">班级当日课间活跃统计</h3>
+                        <span class="help-icon" data-tip="当日平均的课间走出教室的人数大于总人数的75%则认为该班级的课间活跃度高。25%到75%则为中，0%到25%则认为低。">?</span>
+                    </div>
+                    <div class="activity-stats">
+                        <div class="stats-item">
+                            <div class="stats-label">课间室外活动度</div>
+                            <div class="stats-value"><span class="highlight">高</span></div>
+                        </div>
+                        <div class="stats-item">
+                            <div class="stats-label">平均每课间走出教室人数</div>
+                            <div class="stats-value">35人（占比35/40）</div>
+                        </div>
+                    </div>
+
+                    <div class="stats-section">
+                        <div class="title-wrapper">
+                            <h3 class="chart-title">课堂与课间综合统计</h3>
+                            <span class="help-icon" data-tip="展示班级在课堂和课间的整体表现情况，包括课堂专注度、课间活跃度和情绪状态">?</span>
+                        </div>
+                        <div class="activity-stats">
+                            <div class="stats-item">
+                                <div class="stats-label">课堂平均专注度</div>
+                                <div class="stats-value"><span class="highlight">85%</span></div>
+                            </div>
+                            <div class="stats-item">
+                                <div class="stats-label">课堂参与度</div>
+                                <div class="stats-value">高</div>
+                            </div>
+                            <div class="stats-item">
+                                <div class="stats-label">班级情绪指数</div>
+                                <div class="stats-value"><span class="highlight positive">积极</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="charts-row">
+                        <div class="chart-section">
+                            <div class="title-wrapper">
+                                <h3 class="chart-title">班级情绪分布</h3>
+                                <span class="help-icon" data-tip="展示当前班级学生的情绪状态分布，包括积极、平静、疲惫和消极等状态">?</span>
+                            </div>
+                            <div id="emotionChart" style="width: 100%; height: 300px;"></div>
+                        </div>
+
+                        <div class="chart-section">
+                            <div class="title-wrapper">
+                                <h3 class="chart-title">不同课间出教室人数</h3>
+                                <span class="help-icon" data-tip="展示每个课间走出教室的学生人数统计，反映课间活动规律">?</span>
+                            </div>
+                            <div id="breakTimeChart" style="width: 100%; height: 300px;"></div>
+                        </div>
+                    </div>
+
+                    <div class="chart-section full-width">
+                        <div class="title-wrapper">
+                            <h3 class="chart-title">全天行为趋势分析</h3>
+                            <span class="help-icon" data-tip="展示班级在不同时段的课堂专注度和课间活跃度变化">?</span>
+                        </div>
+                        <div id="behaviorTrendChart" style="width: 100%; height: 300px;"></div>
+                    </div>
+
+                    <div class="students-section">
+                        <div class="activity-legend">
+                            <div class="legend-item">
+                                <span class="legend-color high"></span>
+                                <span class="legend-text">高活跃（5次以上）</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-color medium"></span>
+                                <span class="legend-text">中活跃（2-4次）</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-color low"></span>
+                                <span class="legend-text">低活跃（1次）</span>
+                            </div>
+                        </div>
+                        <div class="class-grid">
+                            <div class="class-item" data-activity="high" onclick="highlightStudent(this)">张伟</div>
+                            <div class="class-item" data-activity="high" onclick="highlightStudent(this)">李娜</div>
+                            <div class="class-item" data-activity="low">学生3</div>
+                            <div class="class-item" data-activity="medium">学生4</div>
+                            <div class="class-item" data-activity="low">学生5</div>
+                            <div class="class-item" data-activity="medium">学生6</div>
+                            <div class="class-item" data-activity="high">学生7</div>
+                            <div class="class-item" data-activity="medium">学生8</div>
+                            <div class="class-item" data-activity="low">学生9</div>
+                            <div class="class-item" data-activity="high">学生10</div>
+                            <div class="class-item" data-activity="medium">学生11</div>
+                            <div class="class-item" data-activity="low">学生12</div>
+                            <div class="class-item" data-activity="high">学生13</div>
+                            <div class="class-item" data-activity="medium">学生14</div>
+                            <div class="class-item" data-activity="low">学生15</div>
+                            <div class="class-item" data-activity="high">学生16</div>
+                            <div class="class-item" data-activity="medium">学生17</div>
+                            <div class="class-item" data-activity="low">学生18</div>
+                            <div class="class-item" data-activity="high">学生19</div>
+                            <div class="class-item" data-activity="medium">学生20</div>
+                            <div class="class-item" data-activity="low">学生21</div>
+                            <div class="class-item" data-activity="high">学生22</div>
+                            <div class="class-item" data-activity="medium">学生23</div>
+                            <div class="class-item" data-activity="low">学生24</div>
+                            <div class="class-item" data-activity="high">学生25</div>
+                            <div class="class-item" data-activity="medium">学生26</div>
+                            <div class="class-item" data-activity="low">学生27</div>
+                            <div class="class-item" data-activity="high">学生28</div>
+                            <div class="class-item" data-activity="medium">学生29</div>
+                            <div class="class-item" data-activity="low">学生30</div>
+                            <div class="class-item" data-activity="high">学生31</div>
+                            <div class="class-item" data-activity="medium">学生32</div>
+                            <div class="class-item" data-activity="low">学生33</div>
+                            <div class="class-item" data-activity="high">学生34</div>
+                            <div class="class-item" data-activity="medium">学生35</div>
+                            <div class="class-item" data-activity="low">学生36</div>
+                            <div class="class-item" data-activity="high">学生37</div>
+                            <div class="class-item" data-activity="medium">学生38</div>
+                            <div class="class-item" data-activity="low">学生39</div>
+                            <div class="class-item" data-activity="high">学生40</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="profile-card">
+                    <div class="title-wrapper">
+                        <h3 class="chart-title">个人详情</h3>
+                        <span class="help-icon" data-tip="展示学生的基本信息、课堂表现和课间活动情况">?</span>
+                    </div>
+                    <div class="header">
+                        <div class="avatar">
+                            <img src="/Users/srt/Documents/课间监测/avatar.png" alt="张伟的头像">
+                        </div>
+                        <div class="title">
+                            <h2>个人画像</h2>
+                        </div>
+                    </div>
+                    
+                    <div class="info-item">
+                        <div class="info-label">姓名</div>
+                        <div class="info-value">张伟</div>
+                    </div>
+                    
+                    <div class="info-item">
+                        <div class="info-label">年龄</div>
+                        <div class="info-value">12岁</div>
+                    </div>
+                    
+                    <div class="info-item">
+                        <div class="info-label">性别</div>
+                        <div class="info-value">男</div>
+                    </div>
+                    
+                    <div class="info-item">
+                        <div class="info-label">所属班级</div>
+                        <div class="info-value">5年2班</div>
+                    </div>
+                    
+                    <div class="info-item">
+                        <div class="info-label">视力</div>
+                        <div class="info-value">左眼1.2，右眼1.2</div>
+                    </div>
+                    
+                    <div class="info-item">
+                        <div class="info-label">BMI</div>
+                        <div class="info-value">18.5（正常范围）</div>
+                    </div>
+                    
+                    <div class="info-item">
+                        <div class="info-label">体重</div>
+                        <div class="info-value">40公斤</div>
+                    </div>
+                    
+                    <div class="info-item">
+                        <div class="info-label">课间活跃度</div>
+                        <div class="info-value activity-high">中</div>
+                    </div>
+
+                    <div class="info-section">
+                        <div class="title-wrapper">
+                            <h3 class="chart-title">课堂表现</h3>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">平均专注时长</div>
+                            <div class="info-value">35分钟/节</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">最佳专注课程</div>
+                            <div class="info-value">数学课（90%）</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">课堂参与度</div>
+                            <div class="info-value">主动回答问题5次/天</div>
+                        </div>
+                    </div>
+
+                    <div class="info-section">
+                        <div class="title-wrapper">
+                            <h3 class="chart-title">课间活动</h3>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">活动频率</div>
+                            <div class="info-value">6次/天</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">活动强度</div>
+                            <div class="info-value">高</div>
+                        </div>
+                    </div>
+
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-date">03/04 机器人：</div>
+                            <div class="timeline-content">
+                                张伟今天积极参与了数学竞赛，并取得了优异成绩
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-date">03/03 智慧体育</div>
+                            <div class="timeline-content">
+                                张伟今天在篮球场上打了90分钟，表现出色！
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-date">03/03 课间活动</div>
+                            <div class="timeline-content">
+                                张伟课间积极参与室外活动，课间活跃度在班级的前10%
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-date">01/22 老师说：</div>
+                            <div class="timeline-content">
+                                张伟是年级5班的学生，已经12岁了，他是一个聪明好学的小男孩，学习很用功努力，体力很好，体重也很标准，他和同班同学关系很融洽，总是充满活力，喜欢和同学们一起玩耍，是班级里的开心果。
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        const studentData = [
+            { 
+                name: '张伟',
+                classroomData: {
+                    attention: 85,
+                    bestSubject: '数学',
+                    participation: 5,
+                    attentionSpan: 35,
+                    emotions: {
+                        current: 'happy',
+                        distribution: {
+                            happy: 45,
+                            calm: 30,
+                            tired: 15,
+                            negative: 10
+                        }
+                    }
+                },
+                breakData: {
+                    visits: 6,
+                    activityLevel: 'high'
+                },
+                vision: { left: 1.2, right: 1.2 }
+            },
+            { 
+                name: '李娜',
+                classroomData: {
+                    attention: 90,
+                    bestSubject: '语文',
+                    participation: 7,
+                    attentionSpan: 38,
+                    emotions: {
+                        current: 'tired',
+                        distribution: {
+                            happy: 25,
+                            calm: 35,
+                            tired: 30,
+                            negative: 10
+                        }
+                    }
+                },
+                breakData: {
+                    visits: 5,
+                    activityLevel: 'medium'
+                },
+                vision: { left: 0.3, right: 0.5 }
+            },
+            ...Array.from({length: 38}, (_, i) => {
+                const hasVisionProblem = Math.random() < 0.3;
+                const activityLevel = Math.random();
+                
+                let emotions;
+                if (hasVisionProblem) {
+                    emotions = {
+                        current: ['tired', 'calm', 'negative'][Math.floor(Math.random() * 3)],
+                        distribution: {
+                            happy: Math.floor(Math.random() * 20 + 10),
+                            calm: Math.floor(Math.random() * 20 + 30),
+                            tired: Math.floor(Math.random() * 20 + 20),
+                            negative: Math.floor(Math.random() * 10 + 5)
+                        }
+                    };
+                } else if (activityLevel > 0.7) {
+                    emotions = {
+                        current: ['happy', 'calm'][Math.floor(Math.random() * 2)],
+                        distribution: {
+                            happy: Math.floor(Math.random() * 20 + 40),
+                            calm: Math.floor(Math.random() * 20 + 20),
+                            tired: Math.floor(Math.random() * 10 + 5),
+                            negative: Math.floor(Math.random() * 5 + 5)
+                        }
+                    };
+                } else {
+                    emotions = {
+                        current: ['happy', 'calm', 'tired', 'negative'][Math.floor(Math.random() * 4)],
+                        distribution: {
+                            happy: Math.floor(Math.random() * 30 + 20),
+                            calm: Math.floor(Math.random() * 30 + 20),
+                            tired: Math.floor(Math.random() * 20 + 10),
+                            negative: Math.floor(Math.random() * 10 + 5)
+                        }
+                    };
+                }
+
+                return {
+                    name: `学生${i + 3}`,
+                    classroomData: {
+                        attention: Math.floor(Math.random() * 30 + 70),
+                        bestSubject: ['语文', '数学', '英语'][Math.floor(Math.random() * 3)],
+                        participation: Math.floor(Math.random() * 8 + 2),
+                        attentionSpan: Math.floor(Math.random() * 15 + 25),
+                        emotions: emotions
+                    },
+                    breakData: {
+                        visits: Math.floor(Math.random() * 7 + 1),
+                        activityLevel: ['low', 'medium', 'high'][Math.floor(Math.random() * 3)]
+                    },
+                    vision: {
+                        left: hasVisionProblem ? 0.3 + Math.random() * 0.4 : 1.0 + Math.random() * 0.5,
+                        right: hasVisionProblem ? 0.3 + Math.random() * 0.4 : 1.0 + Math.random() * 0.5
+                    }
+                };
+            })
+        ];
+
+        function updateStudentCards(viewType = 'daily') {
+            const classGrid = document.querySelector(`#${viewType}-content .class-grid`);
+            if (!classGrid) return;
+            
+            classGrid.innerHTML = '';
+
+            studentData.forEach(student => {
+                const div = document.createElement('div');
+                div.className = 'class-item';
+                div.textContent = student.name;
+                div.onclick = () => highlightStudent(div);
+
+                const visits = viewType === 'daily' ? 
+                    student.breakData.visits : 
+                    student.classroomData.attention;
+
+                if (visits >= 5) {
+                    div.setAttribute('data-activity', 'high');
+                } else if (visits >= 2) {
+                    div.setAttribute('data-activity', 'medium');
+                } else {
+                    div.setAttribute('data-activity', 'low');
+                }
+
+                if (student.vision && (student.vision.left < 0.8 || student.vision.right < 0.8)) {
+                    div.classList.add('vision-alert');
+                }
+
+                classGrid.appendChild(div);
+            });
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <script>
+        function initBreakTimeChart() {
+            const chartDom = document.getElementById('breakTimeChart');
+            const myChart = echarts.init(chartDom);
+            const option = {
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    }
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '8%',
+                    top: '3%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: ['上午第一节', '上午第二节', '上午第三节', '上午第四节', 
+                           '下午第一节', '下午第二节', '下午第三节'],
+                    axisLabel: {
+                        interval: 0,
+                        rotate: 15
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '人数',
+                    minInterval: 1,
+                    min: 0,
+                    max: 40,
+                    splitNumber: 8
+                },
+                series: [{
+                    data: [32, 35, 34, 30, 28, 25, 22],
+                    type: 'bar',
+                    itemStyle: {
+                        color: '#1890ff'
+                    },
+                    label: {
+                        show: true,
+                        position: 'top'
+                    }
+                }]
+            };
+            myChart.setOption(option);
+
+            window.addEventListener('resize', () => {
+                myChart.resize();
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', initBreakTimeChart);
+    </script>
+    <script>
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                const monthlyContent = document.getElementById('monthly-content');
+                const dailyContent = document.getElementById('daily-content');
+                
+                if (tab.dataset.tab === 'monthly') {
+                    monthlyContent.style.display = 'block';
+                    dailyContent.style.display = 'none';
+                    initMonthlyBreakTimeChart();
+                } else if (tab.dataset.tab === 'daily') {
+                    monthlyContent.style.display = 'none';
+                    dailyContent.style.display = 'flex';
+                }
+            });
+        });
+
+        document.querySelector('[data-tab="daily"]').click();
+    </script>
+    <script>
+        function initMonthlyBreakTimeChart() {
+            const chartDom = document.getElementById('monthlyBreakTimeChart');
+            const myChart = echarts.init(chartDom);
+            const option = {
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    }
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '8%',
+                    top: '3%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: Array.from({length: 30}, (_, i) => `${30-i}天前`),
+                    axisLabel: {
+                        interval: 4,
+                        rotate: 15
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '人数',
+                    minInterval: 1,
+                    min: 0,
+                    max: 40,
+                    splitNumber: 8
+                },
+                series: [{
+                    data: Array.from({length: 30}, () => Math.floor(Math.random() * 15 + 25)),
+                    type: 'line',
+                    itemStyle: {
+                        color: '#1890ff'
+                    },
+                    areaStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            { offset: 0, color: 'rgba(24,144,255,0.3)' },
+                            { offset: 1, color: 'rgba(24,144,255,0.1)' }
+                        ])
+                    },
+                    smooth: true
+                }]
+            };
+            myChart.setOption(option);
+
+            window.addEventListener('resize', () => {
+                myChart.resize();
+            });
+        }
+    </script>
+    <script>
+        function initBehaviorTrendChart() {
+            const chartDom = document.getElementById('behaviorTrendChart');
+            const myChart = echarts.init(chartDom);
+            const option = {
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'cross'
+                    }
+                },
+                legend: {
+                    data: ['课堂专注度', '课间活跃度']
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    boundaryGap: false,
+                    data: ['8:00', '9:00', '10:00', '11:00', '14:00', '15:00', '16:00']
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '百分比',
+                    min: 0,
+                    max: 100,
+                    interval: 20
+                },
+                series: [
+                    {
+                        name: '课堂专注度',
+                        type: 'line',
+                        data: [90, 85, 75, 65, 70, 80, 75],
+                        smooth: true,
+                        itemStyle: {
+                            color: '#1890ff'
+                        }
+                    },
+                    {
+                        name: '课间活跃度',
+                        type: 'line',
+                        data: [60, 85, 90, 85, 75, 80, 70],
+                        smooth: true,
+                        itemStyle: {
+                            color: '#52c41a'
+                        }
+                    }
+                ]
+            };
+            myChart.setOption(option);
+        }
+
+        function initEmotionChart() {
+            const chartDom = document.getElementById('emotionChart');
+            const myChart = echarts.init(chartDom);
+            const option = {
+                tooltip: {
+                    trigger: 'item'
+                },
+                legend: {
+                    orient: 'horizontal',
+                    bottom: 'bottom'
+                },
+                series: [{
+                    name: '情绪分布',
+                    type: 'pie',
+                    radius: ['40%', '70%'],
+                    avoidLabelOverlap: false,
+                    itemStyle: {
+                        borderRadius: 10,
+                        borderColor: '#fff',
+                        borderWidth: 2
+                    },
+                    label: {
+                        show: false,
+                        position: 'center'
+                    },
+                    emphasis: {
+                        label: {
+                            show: true,
+                            fontSize: '20',
+                            fontWeight: 'bold'
+                        }
+                    },
+                    labelLine: {
+                        show: false
+                    },
+                    data: [
+                        {value: 45, name: '积极愉悦', itemStyle: {color: '#52c41a'}},
+                        {value: 30, name: '平静专注', itemStyle: {color: '#1890ff'}},
+                        {value: 15, name: '疲惫', itemStyle: {color: '#faad14'}},
+                        {value: 10, name: '消极情绪', itemStyle: {color: '#ff4d4f'}}
+                    ]
+                }]
+            };
+            myChart.setOption(option);
+
+            window.addEventListener('resize', () => {
+                myChart.resize();
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initBreakTimeChart();
+            initBehaviorTrendChart();
+            initEmotionChart();
+        });
+
+        function highlightStudent(element) {
+            const studentName = element.textContent;
+            const student = studentData.find(s => s.name === studentName);
+            if (!student) return;
+
+            const profileCard = document.querySelector('.profile-card');
+            profileCard.innerHTML = `
+                <div class="title-wrapper">
+                    <h3 class="chart-title">个人详情</h3>
+                    <span class="help-icon" data-tip="展示学生的基本信息、课堂表现和课间活动情况">?</span>
+                </div>
+                <div class="header">
+                    <div class="avatar">
+                        <img src="/Users/srt/Documents/课间监测/avatar.png" alt="${student.name}的头像">
+                    </div>
+                    <div class="title">
+                        <h2>个人画像</h2>
+                    </div>
+                </div>
+                
+                <div class="info-item">
+                    <div class="info-label">姓名</div>
+                    <div class="info-value">${student.name}</div>
+                </div>
+                
+                <div class="info-item">
+                    <div class="info-label">年龄</div>
+                    <div class="info-value">12岁</div>
+                </div>
+                
+                <div class="info-item">
+                    <div class="info-label">性别</div>
+                    <div class="info-value">男</div>
+                </div>
+                
+                <div class="info-item">
+                    <div class="info-label">所属班级</div>
+                    <div class="info-value">5年2班</div>
+                </div>
+                
+                <div class="info-item">
+                    <div class="info-label">视力</div>
+                    <div class="info-value">左眼1.2，右眼1.2</div>
+                </div>
+                
+                <div class="info-item">
+                    <div class="info-label">BMI</div>
+                    <div class="info-value">18.5（正常范围）</div>
+                </div>
+                
+                <div class="info-item">
+                    <div class="info-label">体重</div>
+                    <div class="info-value">40公斤</div>
+                </div>
+                
+                <div class="info-item">
+                    <div class="info-label">课间活跃度</div>
+                    <div class="info-value activity-high">中</div>
+                </div>
+
+                <div class="info-section">
+                    <div class="title-wrapper">
+                        <h3 class="chart-title">课堂表现</h3>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">平均专注时长</div>
+                        <div class="info-value">${student.classroomData.attentionSpan}分钟/节</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">最佳专注课程</div>
+                        <div class="info-value">${student.classroomData.bestSubject}（${student.classroomData.attention}%）</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">课堂参与度</div>
+                        <div class="info-value">主动回答问题${student.classroomData.participation}次/天</div>
+                    </div>
+                </div>
+                
+                <div class="info-section">
+                    <div class="title-wrapper">
+                        <h3 class="chart-title">课间活动</h3>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">活动频率</div>
+                        <div class="info-value">${student.breakData.visits}次/天</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">活动强度</div>
+                        <div class="info-value">${student.breakData.activityLevel}</div>
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <div class="title-wrapper">
+                        <h3 class="chart-title">情绪状态</h3>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">当前情绪</div>
+                        <div class="info-value">${getEmotionText(student.classroomData.emotions?.current)}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">主要情绪</div>
+                        <div class="info-value">积极愉悦（${student.classroomData.emotions?.distribution?.happy}%）</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">情绪建议</div>
+                        <div class="info-value">${getEmotionAdvice(student.classroomData.emotions?.current)}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function getEmotionText(emotion) {
+            const emotionMap = {
+                happy: '积极愉悦',
+                calm: '平静专注',
+                tired: '略显疲惫',
+                negative: '情绪低落'
+            };
+            return emotionMap[emotion] || emotion;
+        }
+
+        function getEmotionAdvice(emotion) {
+            const adviceMap = {
+                happy: '继续保持积极的学习状态',
+                calm: '当前状态适合深度学习',
+                tired: '建议适当休息，调整状态',
+                negative: '可以和老师同学交流，寻求帮助'
+            };
+            return adviceMap[emotion] || '保持平和心态';
+        }
+    </script>
+</body>
+</html>
